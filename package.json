@@ -1,0 +1,91 @@
+{
+  "name": "@try-works/dsh-anti-slop",
+  "description": "DeepSeek Harness bundle: vendored anti-slop Oxlint rules, the anti_slop_lint tool, the install-anti-slop skill, a standing prompt section, and the /anti-slop command.",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./src/*": "./src/*",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "src",
+    "skills",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "oxlint",
+    "anti-slop",
+    "lint",
+    "typescript"
+  ],
+  "homepage": "https://github.com/try-works/dsh-anti-slop#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/try-works/dsh-anti-slop.git"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-tools": "^0.1.0-rc.5",
+    "@deepseek-ai/dsh-system-prompt": "^0.1.0-rc.5",
+    "@deepseek-ai/dsh-skill": "^0.1.0-rc.5",
+    "@deepseek-ai/dsh-commands": "^0.1.0-rc.5",
+    "@deepseek-ai/dsh-subprocess": "^0.1.0-rc.5",
+    "@deepseek-ai/dsh-llm": "^0.1.0-rc.5"
+  },
+  "dependencies": {
+    "@oxlint/plugins": "1.78.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "file:D:/deepseek-harness/vendor/cordis",
+    "@deepseek-ai/cosmokit": "file:D:/deepseek-harness/vendor/cosmokit",
+    "@deepseek-ai/schemastery": "file:D:/deepseek-harness/vendor/schemastery",
+    "@deepseek-ai/dsh-tools": "file:D:/deepseek-harness/packages/core/tools",
+    "@deepseek-ai/dsh-system-prompt": "file:D:/deepseek-harness/packages/core/system-prompt",
+    "@deepseek-ai/dsh-skill": "file:D:/deepseek-harness/packages/skill/skill",
+    "@deepseek-ai/dsh-commands": "file:D:/deepseek-harness/packages/interaction/commands",
+    "@deepseek-ai/dsh-subprocess": "file:D:/deepseek-harness/packages/subprocess/subprocess",
+    "@deepseek-ai/dsh-subprocess-local": "file:D:/deepseek-harness/packages/subprocess/subprocess-local",
+    "@deepseek-ai/dsh-llm": "file:D:/deepseek-harness/packages/llm/llm",
+    "@deepseek-ai/dsh-agent": "file:D:/deepseek-harness/packages/core/agent",
+    "@deepseek-ai/dsh-scope": "file:D:/deepseek-harness/packages/core/scope",
+    "@deepseek-ai/dsh-session": "file:D:/deepseek-harness/packages/core/session",
+    "@deepseek-ai/dsh-invariants": "file:D:/deepseek-harness/packages/runtime-diagnostics/invariants",
+    "@deepseek-ai/dsh-brand": "file:D:/deepseek-harness/packages/util/brand",
+    "@deepseek-ai/dsh-timeout": "file:D:/deepseek-harness/packages/util/timeout",
+    "@deepseek-ai/dsh-typert-protocol": "file:D:/deepseek-harness/packages/typert/protocol",
+    "oxlint": "1.76.0",
+    "typescript": "^5.6.0",
+    "tsx": "^4.19.0",
+    "vitest": "^2.1.0",
+    "@types/node": "^20.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:unit": "vitest run",
+    "sync:vendored": "node scripts/sync-vendored.mjs",
+    "check:vendored": "node scripts/sync-vendored.mjs --check",
+    "verify": "node scripts/verify.mjs",
+    "test": "npm run build && npm run test:unit && npm run check:vendored && npm run verify",
+    "prepublishOnly": "npm run build && npm run check:vendored && npm run test:unit"
+  },
+  "packageManager": "pnpm@11.7.0"
+}

@@ -1,0 +1,30 @@
+{
+  "upstreamRevision": "6d538555cb151d4121ed51a27db81890eacf8ae9",
+  "upstreamUrl": "https://github.com/dmmulroy/anti-slop",
+  "syncedFromClone": true,
+  "files": {
+    "SKILL.md": "37e432c5b9645ba686ba6ff35f5a66c245322de156ad40fa09ec8ba7cbbd9aaa",
+    "assets/anti-slop/effect/index.ts": "18bd4a2d94aa0d657f3d93b49cd79efc6f3f453f6f47c35e89eb2b38dd209a3b",
+    "assets/anti-slop/effect/rules/no-service-constructor-imports.ts": "ee4380e0ae72a0ca28b2ac91967c4673bfaf45c987ceacc89402b59841b3b667",
+    "assets/anti-slop/index.ts": "0b32e2a9dc552fea5c3580ea809ee2239a193ea71e1ecd2589ef25c50aa1915a",
+    "assets/anti-slop/rules/no-chained-type-assertions.ts": "74ad0ee01514cb4ce38e927fe233c7d3ba000acf053e03bda3432d1276c2957d",
+    "assets/anti-slop/rules/no-conditional-empty-object-spread.ts": "2322467f4d48ef8983de9e2f322963a365ceb0539d6d82fe446e2a9d53d23f24",
+    "assets/anti-slop/rules/no-known-value-widening.ts": "3baccf401985fb4729e767a03b9dc682b583a904fe48dd62496de2462a09107e",
+    "assets/anti-slop/rules/no-module-mocking.ts": "91db9f7ad64c2d3658702f6658c4284344b87240ae5956b89356ba458e029922",
+    "assets/anti-slop/rules/no-object-parameters.ts": "3c2072139e826d30c1b916bba47e6f43cffd404fe9e533f6bc85c5f803d10fe3",
+    "assets/anti-slop/rules/no-reflect-apply.ts": "5b5e28158b70738c91cc17a18aa68dc4910628e5de64a7b4ae550344b379d9b9",
+    "assets/anti-slop/rules/no-reflect-get.ts": "07b2d268eefb30bc01b119f90d036ea5650fff7f82b5036b7b7a0227bb9239ee",
+    "assets/anti-slop/rules/no-runtime-typeof.ts": "59fa33fb333440fa0ef2d1d3bea40ffbb9ee9ccdbfd54e85ef68bf63348d8859",
+    "assets/anti-slop/rules/no-shape-in-symbol-names.ts": "28c8fc34a45ebfdabe4a56c7fb739957ddfa55033d01b9731dd8c49dc3f4cc85",
+    "assets/anti-slop/rules/no-unknown-parameters.ts": "d7827eb4193084efb3fb66a08ea69ddfc2eacb9702da7fa25adf0ce9a645a25d",
+    "assets/anti-slop/rules/no-unknown-returns.ts": "f31cc61e23f119ff763f76a054b31e9e32ff5e0c37e722319ad79a3f8262747f",
+    "assets/anti-slop/rules/no-unknown-type-aliases.ts": "8efeff3144d94abc91412747c1a6a8d393c67406e4c356d914f3b9b277ebec64",
+    "assets/anti-slop/rules/no-unsafe-dictionary-type.ts": "47960abf88ef407fa557868b859f63bdf965f2bf54d807438e8623fc8d3eccd7",
+    "assets/anti-slop/rules/no-widen-then-assert.ts": "3e62fab0cd532522aa9f3cf01f49de15eae7422b7ffb65c93f60fa3231d8e3de",
+    "assets/anti-slop/rules/require-safety-comment-for-type-assertion.ts": "a63c95d8673480a08af11c7c62ee2982227c6326d569f38c9f38a9593eba3e71",
+    "assets/anti-slop/shared/dictionary-types.ts": "1a31e35e61a9b072ee0a1229f4fe5fe2177e9c778312463690c1282bdee834a6",
+    "assets/anti-slop/shared/lexical-type-parameters.ts": "c73cd979b710ed17c89b3ae484b2aedfbf5ccc74c29471539edb16c5753f256a",
+    "assets/anti-slop/shared/reflect-method.ts": "bd261bea42c7eba7285b847ca8d887e95e0d9975ba1ed3fc38ddb1fac21ca41b",
+    "scripts/install.mjs": "f3530efd730e136c813acfb861d4d0099968890a5b380f3e3a5b7edebfede671"
+  }
+}

@@ -1,0 +1,15 @@
+# dsh-anti-slop bundle patch: mounts the anti-slop bundle plugin in an isolated
+# cordis:group realm. The plugin registers the anti_slop_lint tool on
+# ctx.tools, injects the standing anti-slop prompt section via ctx.systemPrompt,
+# registers the install-anti-slop skill on ctx.skills (with a directory
+# resourceBase pointing at the bundled skill directory), and registers the
+# /anti-slop command. Isolating the realm keeps re-composition of the same
+# bundle collision-free.
+- insert:
+    - id: anti-slop-realm
+      name: cordis:group
+      isolate:
+        antiSlop: true
+      config:
+        - id: anti-slop
+          name: '@try-works/dsh-anti-slop/src/index.ts'

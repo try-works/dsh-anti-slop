@@ -1,0 +1,11 @@
+node_modules/
+lib/
+*.tsbuildinfo
+.recursive/
+anti-slop-upstream/
+.worktrees/
+tests/
+scripts/
+*.tgz
+.vitest/
+coverage/

@@ -5,3 +5,11 @@ anti-slop-upstream/
 .worktrees/
 lib/
 *.tgz
+/.recursive/config/recursive-router-discovered.json
+
+# Agent/IDE/harness scaffolding (not part of the published package)
+.agent/
+.codex/
+.cursorrules
+.github/
+CLAUDE.md
