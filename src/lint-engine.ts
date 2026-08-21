@@ -15,12 +15,14 @@
  *    fire), `--disable-nested-config` and `--no-ignore` (deterministic,
  *    target-config-independent), and `--format json`.
  *
- * The vendored plugin imports `@oxlint/plugins`, which Node resolves by
- * walking up from the plugin file — reaching this bundle's own `node_modules`
- * when installed (and the repo's `node_modules` in development), so no
- * dependency shim needs to be materialized. The target project is never
- * mutated: no config file is written there, and `fix` only applies when the
- * caller explicitly requests it with a single target.
+ * The vendored plugin imports `@oxlint/plugins`. Node 24 refuses native
+ * type-stripping for `.ts` files under `node_modules`, so the plugins are
+ * copied out of the bundle into a temp directory at run time and a
+ * `node_modules/@oxlint/plugins` link is created there to make the runtime
+ * dependency resolvable — the plugins then run under plain Node (no tsx
+ * loader). The target project is never mutated: no config file is written
+ * there, and `fix` only applies when the caller explicitly requests it with a
+ * single target.
  *
  * @module dsh-anti-slop/src/lint-engine
  */
@@ -29,7 +31,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { ToolRunContext } from '@deepseek-ai/dsh-tools'
 import type { SubprocessHandle, SubprocessOutcome, SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess'
 import { createRequire } from 'node:module'
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -54,6 +56,61 @@ export function vendoredPluginPath(): string {
 /** Absolute path to the vendored opt-in Effect plugin entry. */
 export function vendoredEffectPluginPath(): string {
   return join(dirname(fileURLToPath(import.meta.url)), '..', 'skills/install-anti-slop/assets/anti-slop/effect/index.ts')
+}
+
+/**
+ * A materialized copy of the vendored plugin tree, living outside
+ * `node_modules` so Node's native type-stripping can load the `.ts` plugin
+ * sources under plain Node (Node 24 refuses type-stripping for `.ts` files
+ * under `node_modules`).
+ */
+export interface MaterializedVendoredPlugin {
+  /** Temp directory holding the copied plugin tree (plus a `node_modules` link). */
+  dir: string
+  /** Absolute path to the copied generic plugin entry (`<dir>/index.ts`). */
+  genericPath: string
+  /** Absolute path to the copied opt-in Effect plugin entry (`<dir>/effect/index.ts`). */
+  effectPath: string
+  /** Remove the temp directory (idempotent, best-effort). */
+  dispose(): void
+}
+
+/** Resolve the real `@oxlint/plugins` package directory (the link target). */
+function resolveOxlintPluginsDir(): string {
+  const entry = createRequire(import.meta.url).resolve('@oxlint/plugins')
+  return dirname(entry)
+}
+
+/**
+ * Copy the vendored plugin tree into a fresh temp directory and make
+ * `@oxlint/plugins` resolvable from there via a directory junction (Windows)
+ * or symlink (POSIX). Exported so tests can assert the returned paths are
+ * outside `node_modules`.
+ */
+export function materializeVendoredPlugin(): MaterializedVendoredPlugin {
+  const source = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills/install-anti-slop/assets/anti-slop')
+  const dir = mkdtempSync(join(tmpdir(), 'anti-slop-plugin-'))
+  const dispose = (): void => {
+    try { rmSync(dir, { recursive: true, force: true }) } catch { /* best-effort */ }
+  }
+  try {
+    cpSync(source, dir, { recursive: true })
+    // A bare `@oxlint/plugins` import resolves by walking up from the plugin
+    // file; the link under `<dir>/node_modules` makes it reach the bundle's
+    // own resolved copy without moving the plugin tree back under node_modules.
+    const linkDir = join(dir, 'node_modules', '@oxlint')
+    mkdirSync(linkDir, { recursive: true })
+    symlinkSync(resolveOxlintPluginsDir(), join(linkDir, 'plugins'), process.platform === 'win32' ? 'junction' : 'dir')
+    return {
+      dir,
+      genericPath: join(dir, 'index.ts'),
+      effectPath: join(dir, 'effect', 'index.ts'),
+      dispose,
+    }
+  } catch (error: unknown) {
+    dispose()
+    throw error
+  }
 }
 
 /** One raw oxlint JSON diagnostic. */
@@ -98,15 +155,21 @@ export type AntiSlopRunResult =
 
 /**
  * Build the oxlint config JSON document enabling the given rules on the
- * vendored plugins. Exported for tests.
+ * vendored plugins. Exported for tests. When `specifiers` is omitted the
+ * specifiers point at the in-bundle vendored tree (used by unit tests);
+ * `runAntiSlopLint` passes the materialized temp copies instead.
  */
-export function buildOxlintConfigJson(rules: string[], severity: 'error' | 'warn' | 'off'): string {
+export function buildOxlintConfigJson(
+  rules: string[],
+  severity: 'error' | 'warn' | 'off',
+  specifiers?: { generic: string; effect: string },
+): string {
   const ruleEntries: Record<string, string> = {}
   for (const rule of rules) ruleEntries[qualify(rule)] = severity
   const config = {
     jsPlugins: [
-      { name: GENERIC_PLUGIN, specifier: vendoredPluginPath() },
-      { name: EFFECT_PLUGIN, specifier: vendoredEffectPluginPath() },
+      { name: GENERIC_PLUGIN, specifier: specifiers?.generic ?? vendoredPluginPath() },
+      { name: EFFECT_PLUGIN, specifier: specifiers?.effect ?? vendoredEffectPluginPath() },
     ],
     rules: ruleEntries,
   }
@@ -300,8 +363,13 @@ export async function runAntiSlopLint(
   const configDir = mkdtempSync(join(tmpdir(), 'anti-slop-config-'))
   const configPath = join(configDir, 'oxlint.config.json')
   let handle: SubprocessHandle
+  let plugin: MaterializedVendoredPlugin | undefined
   try {
-    writeFileSync(configPath, buildOxlintConfigJson(opts.rules, config.severity), 'utf8')
+    plugin = materializeVendoredPlugin()
+    writeFileSync(configPath, buildOxlintConfigJson(opts.rules, config.severity, {
+      generic: plugin.genericPath,
+      effect: plugin.effectPath,
+    }), 'utf8')
     const launch = launchFromExecutable(binary)
     const argv = buildOxlintArgv(launch, {
       configPath,
@@ -322,6 +390,7 @@ export async function runAntiSlopLint(
     } satisfies SubprocessSpawnSpec)
   } catch (error: unknown) {
     try { rmSync(configDir, { recursive: true, force: true }) } catch { /* best-effort */ }
+    plugin?.dispose()
     if (exec.signal.aborted) {
       return { status: 'error', message: 'anti_slop_lint was aborted before completion (tool timeout or caller cancellation)' }
     }
@@ -333,12 +402,14 @@ export async function runAntiSlopLint(
     outcome = await handle.done
   } catch (error: unknown) {
     try { rmSync(configDir, { recursive: true, force: true }) } catch { /* best-effort */ }
+    plugin?.dispose()
     return { status: 'error', message: `anti_slop_lint could not start oxlint: ${error instanceof Error ? error.message : String(error)}` }
   }
 
   const stdout = handle.collected.stdout?.readFrom(0).text ?? ''
   const stderr = handle.collected.stderr?.readFrom(0).text ?? ''
   try { rmSync(configDir, { recursive: true, force: true }) } catch { /* best-effort */ }
+  plugin?.dispose()
 
   if (exec.signal.aborted) {
     return { status: 'error', message: 'anti_slop_lint was aborted before completion (tool timeout or caller cancellation)' }
@@ -355,7 +426,11 @@ export async function runAntiSlopLint(
   try {
     parsed = parseOxlintDiagnostics(stdout)
   } catch (error: unknown) {
-    return { status: 'error', message: `anti_slop_lint could not parse oxlint output: ${error instanceof Error ? error.message : String(error)}` }
+    const tail = stderr.trim().split('\n').slice(-8).join('\n')
+    return {
+      status: 'error',
+      message: `anti_slop_lint could not parse oxlint output: ${error instanceof Error ? error.message : String(error)}${tail.length > 0 ? `\noxlint stderr:\n${tail}` : ''}`,
+    }
   }
   const findings = parsed.diagnostics.map(diagnostic => normalizeFinding(diagnostic, projectRoot))
   if (findings.length > 0) {

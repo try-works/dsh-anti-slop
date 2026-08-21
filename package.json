@@ -1,7 +1,7 @@
 {
   "name": "@try-works/dsh-anti-slop",
   "description": "DeepSeek Harness bundle: vendored anti-slop Oxlint rules, the anti_slop_lint tool, the install-anti-slop skill, a standing prompt section, and the /anti-slop command.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
